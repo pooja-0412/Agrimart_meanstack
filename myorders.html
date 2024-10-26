@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="agrimartApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrimart</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <script>
+ angular.module('agrimartApp', [])
+        .controller('MainController', ['$scope', '$http', function($scope, $http) {
+            // Get the signed-in user's info from localStorage
+        $scope.user = {
+            username: localStorage.getItem('username'),
+            email: localStorage.getItem('email')
+        };
+
+        // Initialize the orders array and success message flag
+        $scope.orders = [];
+        $scope.showSuccessMessage = false;
+
+        // Fetch orders for the signed-in user
+        $http.post('http://localhost:3000/api/getOrders', {
+            username: $scope.user.username,
+            email: $scope.user.email
+        }).then(function(response) {
+            $scope.orders = response.data;
+        }).catch(function(error) {
+            console.error('Error fetching orders:', error);
+        });
+        $scope.isDelivered = function(deliveryDate) {
+    const currentDate = new Date().setHours(0, 0, 0, 0); // Reset time to 00:00:00 for comparison
+    const delivery = new Date(deliveryDate).setHours(0, 0, 0, 0);
+    return currentDate >= delivery; 
+};
+
+        // Function to check if cancel order button should be displayed
+        $scope.isCancelAllowed = function(deliveryDate) {
+            const currentDate = new Date();
+            const delivery = new Date(deliveryDate);
+            return delivery.setHours(0, 0, 0, 0) > currentDate.setHours(0, 0, 0, 0);
+        };
+
+        // Function to cancel an order
+        $scope.cancelOrder = function(order) {
+            // Send the cancellation request
+            $http.post('http://localhost:3000/api/cancelOrder', { orderId: order._id })
+                .then(function(response) {
+                    // Remove the canceled order from the displayed list
+                    const index = $scope.orders.indexOf(order);
+                    if (index > -1) {
+                        $scope.orders.splice(index, 1);
+                    }
+                    // Show success message
+                    $scope.showSuccessMessage = true;
+                    // Hide the success message after 10 seconds
+                    setTimeout(function() {
+                        $scope.showSuccessMessage = false;
+                        $scope.$apply(); // Ensure AngularJS is aware of the change
+                    }, 500);
+                })
+                .catch(function(error) {
+                    console.error('Error canceling order:', error);
+                });
+        };
+        }]);
+            
+</script>
+</head>
+<style>
+
+/* Global Styles */
+body {
+    background-color:rgb(229, 230, 191);
+    margin: 0;
+    font-family: Arial, 'Montserrat';
+
+}
+
+ header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: rgb(200, 153, 140);
+            border-bottom: 1px solid #ddd;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .header-left .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 1s infinite;
+        }
+
+        .header-left .logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .header-left span {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: Arial, 'Montserrat';
+            margin-left: 10px;
+        }
+
+        .header-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-center input {
+            padding: 8px;
+            font-size: 18px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header-center button {
+            background: rgb(120, 176, 0);
+            color: yellow;
+            border: none;
+            padding: 8px 12px;
+            margin-left: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-center button:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+        .header-center button i {
+            font-size: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .header-right .offers {
+            margin-right: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .header-right .nav-link {
+            color: black;
+            text-decoration: none;
+            padding: 8px 12px;
+            margin-right: 10px;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-right .nav-link:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-30px);
+    }
+    60% {
+        transform: translateY(-15px);
+    }
+}
+
+/* Cart container styles */
+.order-container {
+    font-family: 'Montserrat';
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Add padding for spacing */
+}
+
+/* Individual cart item styles */
+.order-item {
+    font-family: 'Montserrat';
+    display: flex;
+    border: 1px solid #ddd; /* Box border */
+    padding: 15px;
+    margin: 10px 0; /* Vertical margin for spacing */
+    width: 60%; /* Width of each item */
+    align-items: flex-start; /* Align items to the start */
+    border-radius: 5px; /* Rounded corners */
+    background-color: white; /* Background color for items */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Slight shadow */
+}
+
+/* Product image styles */
+.order-product-image {
+    align-items: center;
+    width: 300px; /* Fixed width */
+    height: 350px; /* Fixed height for uniformity */
+    object-fit: cover; /* Cover the container */
+    margin-right: 20px; /* Spacing between image and text */
+    border-radius: 5px; /* Slight rounding of image corners */
+}
+
+/* Cart details container */
+.order-details {
+    font-family: 'Montserrat';
+    flex-grow: 1; /* Allow details to grow */
+}
+.success-overlay {
+        font-family:Montserrat;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgb(0, 169, 144); /* Green background */
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 1000; /* Overlay above other elements */
+    }
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.action-button {
+  align-items:center;
+  font-family:'Montserrat';
+  background-color:rgb(255, 0, 86); /* Elegant purple */
+  color: #f8f8f8; /* Soft white */
+  padding: 10px; /* Increased padding */
+  font-size: 16px; /* Larger font size */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 30%;
+  transition: background-color 0.3s; /* Smooth transition */
+}
+
+.action-button:hover {
+  background-color: #46327b; /* Darker shade on hover */
+}
+
+.footer-main {
+    background-color: #222;
+    color: #ecf0f1;
+    padding: 20px 0;
+}
+
+.footer-main .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px; /* Add spacing between rows */
+}
+
+.footer-top-box {
+    flex: 1;
+    margin: 10px;
+    padding: 20px;
+    text-align: center; /* Center content in the box */
+}
+
+.footer-top-box h3,
+.footer-top-box h4 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.list-time,
+.footer-top-box ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.list-time li,
+.footer-top-box ul li {
+    margin-bottom: 10px;
+}
+
+.newsletter-box {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.newsletter-box .form-group {
+    position: relative;
+    flex: 1;
+}
+
+.newsletter-box input {
+    width: 80%;
+    padding: 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.newsletter-box input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.newsletter-box button {
+    padding: 15px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.newsletter-box button:hover {
+    background-color: #2980b9;
+}
+
+.footer-copyright {
+    background-color: #222;
+    color: #ccc;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 20px;
+}
+
+.footer-company a {
+    color: #ecf0f1;
+}
+
+.footer-company a:hover {
+    text-decoration: underline;
+}
+
+.footer-link-contact li p i {
+    color: #ecf0f1; /* Change icon color to white */
+}
+
+.footer-link-contact li p a {
+    color: #ecf0f1; /* Change link color to white */
+}
+.social-icons {
+    display: flex;
+    justify-content: center; /* Center the icons */
+    gap: 15px; /* Space between icons */
+}
+
+.social-icons li {
+    display: inline; /* Display list items inline */
+}
+
+</style>
+</head>
+<body ng-controller="MainController">
+    <header>
+        <div class="header-left">
+            <img src="logo.jpg" alt="Agrimart Logo" class="logo">
+            <span>Agrimart</span>
+        </div>
+        <div class="header-center">
+            <input type="text" ng-model="searchQuery" placeholder="Search...">
+            <button ng-click="search()">
+                <i class="fa fa-search"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <div class="header-right">
+            <a class="nav-link" href="index.html"><i class="fa fa-home"></i> HOME</a>
+            <a class="nav-link" href="about.html"><i class="fa fa-users"></i> ABOUT US</a>
+            <a class="nav-link" href="myorders.html"><i class="fa fa-shopping-cart"></i> MY ORDERS</a>
+            <a class="nav-link" href="mycart.html"><i class="fa fa-cart-plus"></i> MY CART</a>
+            <a class="nav-link" href="myaccount.html"><i class="fa fa-user"></i> ME</a>
+        </div>
+
+        </div>
+    </header>
+
+ <center><h1 style= "font-family: Montserrat;">My Orders</h1></center>
+ <center>
+ <div id="orders-container" class="orders-container">
+    <div ng-repeat="order in orders" class="order-item">
+        <img ng-src="{{order.productImage}}" alt="{{order.productName}}" class="order-product-image">
+        <div class="order-details">
+            <h3>{{order.productName}}</h3>
+            <p>{{order.productDescription}}</p>
+            <p><strong>Original Price:</strong> ₹{{order.originalPrice}}</p>
+            <p><strong>Discounted Price:</strong> ₹{{order.discountedPrice}}</p>
+            <p><strong>You Saved:</strong> ₹{{order.originalPrice - order.discountedPrice}}</p>
+            <p><strong>Payment Method: </strong>Cash On Delivery</p>
+            <p><strong>Ordered Date:</strong> {{order.orderedDate | date:'medium'}}</p>
+            <p><strong>Expected Delivery Date:</strong> {{order.deliveryDate | date:'medium'}}</p>
+            <!-- Display Delivered Successfully message if today is the delivery date -->
+            <p ng-if="isDelivered(order.deliveryDate)" style="color: green; font-weight: bold;">Delivered Successfully!!!</p>
+            <!-- Cancel Order Button -->
+             <div class="actions">
+            <button ng-if="isCancelAllowed(order.deliveryDate)" class="action-button" ng-click="cancelOrder(order)">Cancel Order</button>
+        </div>
+  
+        </div>
+    </div>
+</div>
+<!-- Success Message Overlay -->
+<div ng-if="showSuccessMessage" class="success-overlay">
+    <p>Order canceled successfully!</p>
+</div>
+</center>
+<br>
+ <footer>
+    <div class="footer-main">
+        <div class="container">
+            <div class="row">
+                <div class="footer-top-box">
+                    <h3>Business Time</h3>
+                    <ul class="list-time">
+                        <li>Everyday</li>
+                        <li>Your Timing</li>
+                    </ul>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Newsletter</h3>
+                    <form class="newsletter-box">
+                        <div class="form-group">
+                            <input type="email" name="Email" placeholder="Email Address*" />
+                        </div>
+                        <button class="btn" type="submit">Submit</button>
+                    </form>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Social Media</h3>
+                    <p>Explore Us In</p>
+                    <ul class="social-icons">
+                        <li><a href="#"><i class="fab fa-facebook" aria-hidden="true"></i></a></li>
+                        <li><a href="#"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+            
+<hr>
+                    <div class="footer-top-box">
+                    <h4>Contact Us</h4>
+                    <ul>
+                    
+                        <li>
+                            <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:+91-987654321">+91-987654321</a></p>
+                        </li>
+                        <li>
+                            <p><i class="fas fa-envelope"></i>Email: <a href="mailto:agrimart@gmail.com">agrimart@gmail.com</a></p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+  </div>
+
+    <div class="footer-copyright">
+        <p class="footer-company">All Rights Reserved. &copy; 2024 <a href="index.html">Agrimart</a></p>
+    </div>
+</footer>
+
+
+</body>
+</html>
+

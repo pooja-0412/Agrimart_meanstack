@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="agrimartApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrimart</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Link to Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <script src="app.js"></script>
+    <style>
+        /* Global Styles */
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color:rgb(200, 153, 140);
+            border-bottom: 1px solid #ddd;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .header-left .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 1s infinite;
+        }
+
+        .header-left .logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .header-left span {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: Arial, 'Montserrat';
+            margin-left: 10px;
+        }
+
+        .header-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-center input {
+            padding: 8px;
+            font-size: 18px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header-center button {
+            background: rgb(120, 176, 0);
+            color: yellow;
+            border: none;
+            padding: 8px 12px;
+            margin-left: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-center button:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+        .header-center button i {
+            font-size: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .header-right .offers {
+            margin-right: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .header-right .nav-link {
+            color: black;
+            text-decoration: none;
+            padding: 8px 12px;
+            margin-right: 10px;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-right .nav-link:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+.carousel-container {
+    margin: 20px; /* Four sides gap */
+}
+
+.carousel {
+    position: relative;
+    width: 1200px; /* Wider carousel */
+    height: 350px; /* Height of the carousel */
+    overflow: hidden;
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Makes sure the image fits within the slide while maintaining aspect ratio */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 20px; /* Adds padding to both sides */
+}
+
+.nav-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 30px;
+    cursor: pointer;
+    font-size: 20px;
+    border-radius: 20%;
+    transition: background-color 0.3s ease;
+}
+
+.nav-button:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.nav-button.prev {
+    left: 0;
+}
+
+.nav-button.next {
+    right: 0;
+}
+
+.carousel-progress-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30%; /* Bar width */
+    height: 5px;
+    background-color: rgba(200, 200, 200, 0.8);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background-color: #8b008b; /* Color of the progress bar */
+    transition: width 0.5s ease-in-out;
+    border-radius: 5px;
+}
+
+        /* Style for the category section with background image */
+        .category-section {
+            position: relative;
+            width: 100%;
+            padding: 20px;
+            background-color:rgb(229, 230, 191);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .category-box {
+            width: calc(13.333% - 10px);
+            box-sizing: border-box;
+            text-align: center;
+            background-color: rgba(60, 60, 60, 0.4);
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .category-box:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        .category-box .logo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto;
+            animation: spin 10s infinite linear;
+        }
+
+        .category-box .logo img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .category-box button {
+            background: rgb(216, 147, 0);
+            color: black;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .category-box button:hover {
+            background-color: rgb(149, 189, 0);
+            transform: scale(1.1);
+        }
+
+        /* New Offer Boxes Section */
+        .offer-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: rgba(59, 133, 0, 0.5);
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .offer-box {
+            width: 80%;
+            max-width: 1200px;
+            height: 50px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            color: rgb(255, 165, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 400px;
+            position: relative;
+            margin: 0 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .offer-box h2 {
+            font-size: 40px;
+            font-weight: bold;
+            margin: 0;
+            z-index: 1;
+        }
+
+        .offer-box:nth-child(1) {
+            background-image: url('offer1.jpg');
+        }
+
+        .offer-box:nth-child(2) {
+            background-image: url('offer2.jpg');
+        }
+
+        .offer-box:nth-child(3) {
+            background-image: url('offer3.jpg');
+        }
+
+        .offer-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .category-box {
+                width: calc(50% - 20px);
+            }
+
+            .offer-boxes {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .offer-box {
+                height: 150px;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .category-box {
+                width: calc(100% - 20px);
+            }
+
+            .offer-box {
+                height: 120px;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-30px);
+            }
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+.footer-main {
+    background-color: #222;
+    color: #ecf0f1;
+    padding: 20px 0;
+}
+
+.footer-main .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px; /* Add spacing between rows */
+}
+
+.footer-top-box {
+    flex: 1;
+    margin: 10px;
+    padding: 20px;
+    text-align: center; /* Center content in the box */
+}
+
+.footer-top-box h3,
+.footer-top-box h4 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.list-time,
+.footer-top-box ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.list-time li,
+.footer-top-box ul li {
+    margin-bottom: 10px;
+}
+
+.newsletter-box {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.newsletter-box .form-group {
+    position: relative;
+    flex: 1;
+}
+
+.newsletter-box input {
+    width: 80%;
+    padding: 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.newsletter-box input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.newsletter-box button {
+    padding: 15px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.newsletter-box button:hover {
+    background-color: #2980b9;
+}
+
+.footer-copyright {
+    background-color: #222;
+    color: #ccc;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 20px;
+}
+
+.footer-company a {
+    color: #ecf0f1;
+}
+
+.footer-company a:hover {
+    text-decoration: underline;
+}
+
+.footer-link-contact li p i {
+    color: #ecf0f1; /* Change icon color to white */
+}
+
+.footer-link-contact li p a {
+    color: #ecf0f1; /* Change link color to white */
+}
+.social-icons {
+    display: flex;
+    justify-content: center; /* Center the icons */
+    gap: 15px; /* Space between icons */
+}
+
+.social-icons li {
+    display: inline; /* Display list items inline */
+}
+.exclusive-section {
+    text-align: center;
+    padding: 20px;
+background-color:rgb(229, 230, 191);
+
+}
+.exclusive-images {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.item-container {
+    margin: 10px;
+}
+
+.item-container img {
+    width: 300px;
+    height: auto;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.item-container img:hover {
+    transform: scale(1.05);
+}
+
+a {
+    text-decoration: none;
+}
+.brands-section {
+    text-align: center;
+    padding: 10px;
+}
+
+
+.brands-images {
+    
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.brand-container {
+    width:8%;
+    height:10%;
+    margin: 15px;
+    padding: 5px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    transition: transform 0.3s;
+}
+
+.brand-container img {
+    width: 120px;
+    height: 100px;
+    cursor: pointer;
+}
+
+.brand-container:hover {
+    transform: scale(1.05);
+}
+
+    </style>
+</head>
+<body ng-controller="MainController">
+    <header>
+        <div class="header-left">
+            <img src="logo.jpg" alt="Agrimart Logo" class="logo">
+            <span style="font-family:Montserrat";>Agrimart</span>
+        </div>
+       <div class="header-center">
+        <input type="text" ng-model="searchQuery" placeholder="Search...">
+        <button ng-click="search()">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
+        <div class="header-right">
+            <a class="nav-link" href="index.html"><i class="fa fa-home"></i> HOME</a>
+            <a class="nav-link" href="about.html"><i class="fa fa-users"></i> ABOUT US</a>
+            <a class="nav-link" href="myorders.html"><i class="fa fa-shopping-cart"></i> MY ORDERS</a>
+            <a class="nav-link" href="mycart.html"><i class="fa fa-cart-plus"></i> MY CART</a>
+            <a class="nav-link" href="myaccount.html"><i class="fa fa-user"></i> ME</a>
+        </div>
+    </header>
+
+    <main>
+<br>
+<br>
+   <img src="front.png" alt="offers" align="center" width="100%" height="500px">
+<br>
+     
+        <!-- Category Section with Background Image -->
+        <div class="category-section">
+            <h1 style="font-size:30px;text-align:center;color:rgb(149, 0, 0);">Top Categories to Explore</h1>
+
+            <!-- Category Boxes -->
+            <div class="categories">
+                <div class="category-box">
+                    <div class="logo">
+                        <img src="seeds.jpg" alt="Seeds Logo">
+                    </div>
+                    <button onclick="location.href='seeds.html'">Seeds</button>
+                </div>
+                <div class="category-box">
+                    <div class="logo">
+                        <img src="saplings.jpg" alt="Saplings Logo">
+                    </div>
+                    <button onclick="location.href='saplings.html'">Saplings</button>
+                </div>
+                <div class="category-box">
+                    <div class="logo">
+                        <img src="fertilizers.jpg" alt="Fertilizers Logo">
+                    </div>
+                    <button onclick="location.href='fertilizers.html'">Fertilizers</button>
+                </div>
+                <div class="category-box">
+                    <div class="logo">
+                        <img src="pesticides.jpg" alt="Pesticides Logo">
+                    </div>
+                    <button onclick="location.href='pesticides.html'">Pesticides</button>
+                </div>
+                <div class="category-box">
+                    <div class="logo">
+                        <img src="tools.jpg" alt="Tools Logo">
+                    </div>
+                    <button onclick="location.href='tools.html'">Tools</button>
+                </div>
+            </div>
+</div>
+<div class="carousel-container">
+    <div class="carousel">
+        <div class="carousel-slide" ng-repeat="image in images" ng-show="isActive($index)">
+            <img ng-src="{{image.src}}" alt="{{image.alt}}">
+        </div>
+        <div class="carousel-nav">
+            <button class="nav-button prev" ng-click="prevSlide()">&#10094;</button>
+            <button class="nav-button next" ng-click="nextSlide()">&#10095;</button>
+        </div>
+        <div class="carousel-progress-bar">
+            <div class="progress" ng-style="{'width': (currentSlide / (images.length - 1)) * 100 + '%'}"></div>
+        </div>
+    </div>
+</div>
+<center>
+    <img src="indexoff.png" alt="offers" width="70%" height="400px">
+    </center>
+ <br><br>
+ <section class="exclusive-section">
+        <h2 style="font-size:28px;">Exclusive</h2>
+        <div class="exclusive-images">
+            <div class="item-container" ng-repeat="item in items">
+                <a href="{{item.link}}">
+                    <img ng-src="{{item.src}}" alt="{{item.alt}}" />
+                </a>
+            </div>
+        </div>
+    </section>
+<section class="brands-section">
+        <h2>Shop By Brands</h2>
+        <div class="brands-images">
+            <div class="brand-container" ng-repeat="brand in brands">
+                <a href="{{brand.link}}">
+                    <img ng-src="{{brand.src}}" alt="{{brand.alt}}" />
+                </a>
+            </div>
+        </div>
+    </section>
+
+<br>
+<img src="fea2.jpg" alt="offers" align="center" width="100%">
+
+    </main>
+<br>
+ <footer>
+    <div class="footer-main">
+        <div class="container">
+            <div class="row">
+                <div class="footer-top-box">
+                    <h3>Business Time</h3>
+                    <ul class="list-time">
+                        <li>Everyday</li>
+                        <li>Your Timing</li>
+                    </ul>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Newsletter</h3>
+                    <form class="newsletter-box">
+                        <div class="form-group">
+                            <input type="email" name="Email" placeholder="Email Address*" />
+                        </div>
+                        <button class="btn" type="submit">Submit</button>
+                    </form>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Social Media</h3>
+                    <p>Explore Us In</p>
+                    <ul class="social-icons">
+                        <li><a href="#"><i class="fab fa-facebook" aria-hidden="true"></i></a></li>
+                        <li><a href="#"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+            
+<hr>
+                    <div class="footer-top-box">
+                    <h4>Contact Us</h4>
+                    <ul>
+                    
+                        <li>
+                            <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:+91-987654321">+91-987654321</a></p>
+                        </li>
+                        <li>
+                            <p><i class="fas fa-envelope"></i>Email: <a href="mailto:agrimart@gmail.com">agrimart@gmail.com</a></p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+  </div>
+
+    <div class="footer-copyright">
+        <p class="footer-company">All Rights Reserved. &copy; 2024 <a href="index.html">Agrimart</a></p>
+    </div>
+</footer>
+
+
+</body>
+</html>

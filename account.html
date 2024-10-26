@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="accountApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>Create Account</title>
+    <style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Montserrat;
+    background: url('background1.jpeg') no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200vh;
+}
+
+.account-form {
+    text-align: center;
+    background: rgba(60, 60, 60, 0.5);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 2s ease-in-out;
+    width: 500px; /* Increased size for additional fields */
+}
+
+.logo img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    animation: bounce 2s infinite;
+}
+
+h1 {
+    margin: 15px 0;
+    font-size: 30px;
+    color: rgb(144, 255, 0);
+    font-weight: bold;
+}
+
+form {
+    margin: 20px 0;
+}
+
+label {
+    display: block;
+    color:white;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    font-size: 18px;
+    text-align:left;
+}
+
+input, select {
+    width: 90%;
+    padding: 12px;
+    margin: 5px 0;
+    background-color:rgba(255, 99, 71, 0.4);
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+input.ng-invalid.ng-touched {
+    border-color: red;
+}
+
+input:focus, select:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+button {
+    font-family: Montserrat;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+p {
+    margin: 15px 0;
+}
+
+a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.error {
+    color: red;
+    font-weight:bold;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-30px);
+    }
+    60% {
+        transform: translateY(-15px);
+    }
+}
+    </style>
+</head>
+<body ng-controller="AccountController">
+    <div class="container">
+        <div class="account-form">
+            <div class="logo">
+                <img src="logo.jpg" alt="AGRIMART Logo">
+            </div>
+            <h1>AGRIMART</h1>
+            <form name="accountForm" novalidate>
+                <label for="username">Enter your username</label>
+                <input type="text" id="username" ng-model="user.username" name="username" ng-blur="validateField('username')" ng-focus="resetError('username')" required>
+                <div class="error" ng-show="accountForm.username.$touched && accountForm.username.$error.required">
+                    {{errors.username}}
+                </div>
+
+                <label for="email">Enter your email ID</label> 
+                <input type="email" id="email" ng-model="user.email" name="email" ng-blur="validateField('email')" ng-focus="resetError('email')" required>
+                <div class="error" ng-show="accountForm.email.$touched && (accountForm.email.$invalid || errors.email)">
+                     {{errors.email}} <!-- Display error messages -->
+                </div>
+
+                <label for="phone">Enter your phone number</label>
+                <input type="tel" id="phone" ng-model="user.phone" name="phone"  ng-blur="validateField('phone')" ng-focus="resetError('phone')"  required pattern="^[0-9]{10}$">
+                <div class="error" ng-show="accountForm.phone.$touched && (accountForm.phone.$error.required || errors.phone)">
+                  {{errors.phone}}
+                </div>
+
+
+                <label for="gender">Select your gender</label>
+                <select id="gender" ng-model="user.gender" name="gender" ng-blur="validateField('gender')" ng-focus="resetError('gender')" required>
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="error" ng-show="accountForm.gender.$touched && accountForm.gender.$error.required">
+                    {{errors.gender}}
+                </div>
+
+                <label for="doorNo">Enter your door no</label>
+                <input type="text" id="doorNo" ng-model="user.doorNo" name="doorNo" ng-blur="validateField('doorNo')" ng-focus="resetError('doorNo')" required>
+                <div class="error" ng-show="accountForm.doorNo.$touched && accountForm.doorNo.$error.required">
+                    {{errors.doorNo}}
+                </div>
+
+                <label for="street">Enter your street name</label>
+                <input type="text" id="street" ng-model="user.street" name="street" ng-blur="validateField('street')" ng-focus="resetError('street')" required>
+                <div class="error" ng-show="accountForm.street.$touched && accountForm.street.$error.required">
+                    {{errors.street}}
+                </div>
+
+                <label for="landmark">Enter your land mark</label>
+                <input type="text" id="landmark" ng-model="user.landmark" name="landmark" ng-blur="validateField('landmark')" ng-focus="resetError('landmark')" required>
+                <div class="error" ng-show="accountForm.landmark.$touched && accountForm.landmark.$error.required">
+                    {{errors.landmark}}
+                </div>
+
+                <label for="city">Enter your city</label>
+                <input type="text" id="city" ng-model="user.city" name="city" ng-blur="validateField('city')" ng-focus="resetError('city')" required>
+                <div class="error" ng-show="accountForm.city.$touched && accountForm.city.$error.required">
+                    {{errors.city}}
+                </div>
+
+                <label for="district">Enter your district</label>
+                <input type="text" id="district" ng-model="user.district" name="district" ng-blur="validateField('district')" ng-focus="resetError('district')" required>
+                <div class="error" ng-show="accountForm.district.$touched && accountForm.district.$error.required">
+                    {{errors.district}}
+                </div>
+
+                <label for="state">Enter your state</label>
+                <input type="text" id="state" ng-model="user.state" name="state" ng-blur="validateField('state')" ng-focus="resetError('state')" required>
+                <div class="error" ng-show="accountForm.state.$touched && accountForm.state.$error.required">
+                    {{errors.state}}
+                </div>
+
+                <label for="nationality">Enter your nationality</label>
+                <input type="text" id="nationality" ng-model="user.nationality" name="nationality" ng-blur="validateField('nationality')" ng-focus="resetError('nationality')" required>
+                <div class="error" ng-show="accountForm.nationality.$touched && accountForm.nationality.$error.required">
+                    {{errors.nationality}}
+                </div>
+
+                <br><br>
+                <button type="button" ng-click="createAccount()">Create Account</button>
+                <!-- General error message displayed here -->
+                <div class="error" ng-show="errors.general">
+                    {{errors.general}}
+                </div>
+                
+            </form>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="agrimartApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrimart</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <script>
+        angular.module('agrimartApp', [])
+.controller('MainController', ['$scope', '$http', '$window', function($scope, $http, $window) {
+    $scope.account = null; // Initialize account variable
+
+    // Function to get the account details of the signed-in user
+    $scope.getAccountDetails = function() {
+        // Assuming you have stored the username/email in localStorage after login
+        var username = localStorage.getItem('username');
+        var email = localStorage.getItem('email');
+
+        if (username && email) {
+            $http.post('http://localhost:3000/api/account', { username: username, email: email })
+                .then(function(response) {
+                    $scope.account = response.data; // Set account data from response
+                })
+                .catch(function(error) {
+                    console.error('Error fetching account details:', error);
+                    // Redirect to signup page if not found
+                    if (error.status === 404) {
+                        $window.location.href = 'signup.html';
+                    }
+                });
+        } else {
+            // Redirect to signup page if no username/email is found
+            $window.location.href = 'signup.html';
+        }
+    };
+
+    // Call the function to fetch account details on controller load
+    $scope.getAccountDetails();
+}]);
+
+</script>
+</head>
+
+<style>
+/* Global Styles */
+body {
+    background-color:rgb(229, 230, 191);
+    margin: 0;
+    font-family: Arial, 'Montserrat';
+
+}
+
+ header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: rgb(200, 153, 140);
+            border-bottom: 1px solid #ddd;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .header-left .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 1s infinite;
+        }
+
+        .header-left .logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .header-left span {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: Arial, 'Montserrat';
+            margin-left: 10px;
+        }
+
+        .header-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-center input {
+            padding: 8px;
+            font-size: 18px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header-center button {
+            background: rgb(120, 176, 0);
+            color: yellow;
+            border: none;
+            padding: 8px 12px;
+            margin-left: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-center button:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+        .header-center button i {
+            font-size: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .header-right .offers {
+            margin-right: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .header-right .nav-link {
+            color: black;
+            text-decoration: none;
+            padding: 8px 12px;
+            margin-right: 10px;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-right .nav-link:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-30px);
+    }
+    60% {
+        transform: translateY(-15px);
+    }
+}
+div[ng-if="account"] {
+    background-color: rgb(146, 126, 97); /* Soft beige background */
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e0d8c3;
+    color: #4a4a4a; /* Dark gray text for readability */
+    font-family: 'Montserrat', serif; /* Elegant serif font */
+    max-width: 450px;
+    margin: 30px auto;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+div[ng-if="account"]:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+div[ng-if="account"] p {
+    font-size: 17px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #ffffff;
+    border-left: 4px solid #d4a373; /* Elegant warm brown color */
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease, border-left 0.3s ease;
+}
+
+div[ng-if="account"] p:hover {
+    background-color: #f5efe6; /* Light beige background on hover */
+    border-left-color: #b08968; /* Darker warm brown */
+}
+
+div[ng-if="account"] p strong {
+    color: #b08968; /* Soft muted brown for strong elements */
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 15px;
+}
+
+div[ng-if="account"] p:hover strong {
+    color: #855446; /* Rich reddish-brown on hover */
+}
+
+/* Flexbox container to arrange boxes horizontally */
+.nav-container {
+    display: flex;
+    justify-content: center;  /* Centering the boxes horizontally */
+    gap: 30px; /* Space between the boxes */
+    margin: 20px;
+}
+
+/* Container for navigation boxes */
+.nav-box {
+    display: inline-block;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    font-family:'Montserrat';
+   background-color:rgb(255, 0, 86); /* Elegant purple */
+   color: #f8f8f8; /* Soft white */
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    width: 200px;
+}
+
+
+
+/* Hover effects */
+.nav-box:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+
+/* Text inside the boxes */
+.nav-box a {
+    text-decoration: none;
+    color: white;
+    font-family:'Montserrat';
+    font-weight: bold;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.3s ease;
+}
+
+.footer-main {
+    background-color: #222;
+    color: #ecf0f1;
+    padding: 20px 0;
+}
+
+.footer-main .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px; /* Add spacing between rows */
+}
+
+.footer-top-box {
+    flex: 1;
+    margin: 10px;
+    padding: 20px;
+    text-align: center; /* Center content in the box */
+}
+
+.footer-top-box h3,
+.footer-top-box h4 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.list-time,
+.footer-top-box ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.list-time li,
+.footer-top-box ul li {
+    margin-bottom: 10px;
+}
+
+.newsletter-box {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.newsletter-box .form-group {
+    position: relative;
+    flex: 1;
+}
+
+.newsletter-box input {
+    width: 80%;
+    padding: 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.newsletter-box input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.newsletter-box button {
+    padding: 15px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.newsletter-box button:hover {
+    background-color: #2980b9;
+}
+
+.footer-copyright {
+    background-color: #222;
+    color: #ccc;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 20px;
+}
+
+.footer-company a {
+    color: #ecf0f1;
+}
+
+.footer-company a:hover {
+    text-decoration: underline;
+}
+
+.footer-link-contact li p i {
+    color: #ecf0f1; /* Change icon color to white */
+}
+
+.footer-link-contact li p a {
+    color: #ecf0f1; /* Change link color to white */
+}
+.social-icons {
+    display: flex;
+    justify-content: center; /* Center the icons */
+    gap: 15px; /* Space between icons */
+}
+
+.social-icons li {
+    display: inline; /* Display list items inline */
+}
+
+</style>
+</head>
+<body ng-controller="MainController">
+    <header>
+        <div class="header-left">
+            <img src="logo.jpg" alt="Agrimart Logo" class="logo">
+            <span>Agrimart</span>
+        </div>
+        <div class="header-center">
+            <input type="text" ng-model="searchQuery" placeholder="Search...">
+            <button ng-click="search()">
+                <i class="fa fa-search"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <div class="header-right">
+            <a class="nav-link" href="index.html"><i class="fa fa-home"></i> HOME</a>
+            <a class="nav-link" href="about.html"><i class="fa fa-users"></i> ABOUT US</a>
+            <a class="nav-link" href="myorders.html"><i class="fa fa-shopping-cart"></i> MY ORDERS</a>
+            <a class="nav-link" href="mycart.html"><i class="fa fa-cart-plus"></i> MY CART</a>
+            <a class="nav-link" href="myaccount.html"><i class="fa fa-user"></i> ME</a>
+        </div>
+
+        </div>
+    </header>
+
+ <center><h1 style= "font-family: Montserrat;">Account Details</h1></center>
+ <div ng-if="account">
+    <p><strong>Username:</strong> {{ account.username }}</p>
+    <p><strong>Email:</strong> {{ account.email }}</p>
+    <p><strong>Phone:</strong> {{ account.phone }}</p>
+    <p><strong>Gender:</strong> {{ account.gender }}</p>
+    <p><strong>Address:</strong> {{ account.doorNo }}, {{ account.street }}, {{ account.landmark }}, {{ account.city }}, {{ account.district }}, {{ account.state }}</p>
+    <p><strong>Nationality:</strong> {{ account.nationality }}</p>
+    
+</div>
+<div class="nav-container">
+    <div class="nav-box">
+        <a href="mycart.html">My Carts</a>
+    </div>
+    <div class="nav-box">
+        <a href="myorders.html">My Orders</a>
+    </div>
+</div>
+
+<div ng-if="!account">
+    <p>No account details available. Please sign in.</p>
+</div>
+<br>
+ <footer>
+    <div class="footer-main">
+        <div class="container">
+            <div class="row">
+                <div class="footer-top-box">
+                    <h3>Business Time</h3>
+                    <ul class="list-time">
+                        <li>Everyday</li>
+                        <li>Your Timing</li>
+                    </ul>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Newsletter</h3>
+                    <form class="newsletter-box">
+                        <div class="form-group">
+                            <input type="email" name="Email" placeholder="Email Address*" />
+                        </div>
+                        <button class="btn" type="submit">Submit</button>
+                    </form>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Social Media</h3>
+                    <p>Explore Us In</p>
+                    <ul class="social-icons">
+                        <li><a href="#"><i class="fab fa-facebook" aria-hidden="true"></i></a></li>
+                        <li><a href="#"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+            
+<hr>
+                    <div class="footer-top-box">
+                    <h4>Contact Us</h4>
+                    <ul>
+                    
+                        <li>
+                            <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:+91-987654321">+91-987654321</a></p>
+                        </li>
+                        <li>
+                            <p><i class="fas fa-envelope"></i>Email: <a href="mailto:agrimart@gmail.com">agrimart@gmail.com</a></p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+  </div>
+
+    <div class="footer-copyright">
+        <p class="footer-company">All Rights Reserved. &copy; 2024 <a href="index.html">Agrimart</a></p>
+    </div>
+</footer>
+
+
+</body>
+</html>
+

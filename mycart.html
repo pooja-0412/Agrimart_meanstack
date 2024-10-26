@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="agrimartApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrimart</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <script>
+        angular.module('agrimartApp', [])
+        .controller('MainController', ['$scope', '$http', function($scope, $http) {
+            // Get the signed-in user's info from localStorage
+            $scope.user = {
+                username: localStorage.getItem('username'),
+                email: localStorage.getItem('email')
+            };
+    
+            // Initialize the cart items array
+            $scope.cartItems = [];
+    
+            // Fetch cart items for the signed-in user
+$http.post('http://localhost:3000/api/getCart', {
+    username: $scope.user.username,
+    email: $scope.user.email
+}).then(function(response) {
+    $scope.cartItems = response.data;
+
+    // Fetch account details for the signed-in user to show shipping address in Bill Summary
+    $http.post('http://localhost:3000/api/account', {
+        username: $scope.user.username,
+        email: $scope.user.email
+    }).then(function(accountResponse) {
+        $scope.accountDetails = accountResponse.data;
+
+        // Set current date as order date
+        var currentDate = new Date();
+        $scope.orderDate = currentDate;
+
+        // Calculate delivery date (3 days after the order date)
+        var deliveryDate = new Date(currentDate);
+        deliveryDate.setDate(deliveryDate.getDate() + 3);
+        $scope.deliveryDate = deliveryDate;
+    }).catch(function(error) {
+        console.error('Error fetching account details:', error);
+    });
+
+}).catch(function(error) {
+    console.error('Error fetching cart items:', error);
+});
+
+    
+            // Function to calculate total original price
+            $scope.getTotalOriginalPrice = function() {
+                return $scope.cartItems.reduce((total, item) => total + item.originalPrice, 0);
+            };
+    
+            // Function to calculate total discounted price
+            $scope.getTotalDiscountedPrice = function() {
+                return $scope.cartItems.reduce((total, item) => total + item.discountedPrice, 0);
+            };
+    
+            // Function to handle "Buy Now" action and show pop-up with product details
+            $scope.buyNow = function(item) {
+                $http.post('http://localhost:3000/api/account', {
+                    username: $scope.user.username,
+                    email: $scope.user.email
+                }).then(function(response) {
+                    const accountDetails = response.data;
+                    const currentDate = new Date();
+                // Create the pop-up content
+                 const popupContent = `
+                    <div style="padding: 10px; text-align: center;font-family: 'Montserrat', sans-serif;" > <!-- Removed inner border -->
+                        <h2>Order Summary</h2>
+                        <img src="${item.productImage}" alt="${item.productName}" style="width:100px;"><br>
+                        <p><strong>Product:</strong> ${item.productName}</p>
+                        <p><strong>Quantity:</strong> ${item.selectedQuantity}</p>
+                        <p><strong>Original Price:</strong> ₹${item.originalPrice}</p>
+                        <p><strong>Discounted Price:</strong> ₹${item.discountedPrice}</p>
+                        <p><strong>You Saved:</strong> ₹${item.originalPrice - item.discountedPrice}</p>
+                        <p><strong>Shipping Address:</strong> ${accountDetails.username},${accountDetails.doorNo}, ${accountDetails.street}, ${accountDetails.landmark}, ${accountDetails.city}, ${accountDetails.state}, Mobile No : ${accountDetails.phone}</p>
+                        <p><strong>Order Date:</strong> ${currentDate.toLocaleString()}</p>
+                        <p><strong>Payment Method:</strong></p>
+        <label>
+            <input type="radio" name="paymentMethod" value="COD" checked> Cash on Delivery
+        </label>
+        <br>
+                        <button id="placeOrderButton" style="margin-top:10px;">Place Order</button>
+                        <button id="closePopupButton" style="margin-top:10px; margin-left: 10px;">Close</button>
+                        <p id="confirmationMessage" style="color: #ff5722; margin-top: 10px; font-weight:bold"></p>
+                    </div>`;
+
+    
+                    // Insert the pop-up content into the specific section of the page
+                    document.getElementById('popupContent').innerHTML = popupContent;
+                    document.getElementById('popupOverlay').style.display = 'block';  // Show the overlay
+                    document.getElementById('popupContent').style.display = 'block';  // Show the popup
+    
+                    // Add Place Order functionality
+                    document.getElementById('placeOrderButton').addEventListener('click', function() {
+                        $http.post('http://localhost:3000/api/placeOrder', {
+                            username: $scope.user.username,
+                            email: $scope.user.email,
+                            productName: item.productName,
+                            productImage: item.productImage,
+                            productDescription: item.productDescription,
+                            selectedQuantity: item.selectedQuantity,
+                            originalPrice: item.originalPrice,
+                            discountedPrice: item.discountedPrice
+                        }).then(function(response) {
+                            document.getElementById('confirmationMessage').innerText = 'Order Placed Successfully!';
+                            // Remove the item from the carts table using the new API
+        $http.post('http://localhost:3000/api/removeFromCart', {
+            username: $scope.user.username,
+            email: $scope.user.email,
+            productName: item.productName
+        }).then(function(deleteResponse) {
+            console.log("Product removed from cart successfully.");
+            // Optionally refresh cart items from the server or remove it from the scope
+            const index = $scope.cartItems.indexOf(item);
+            if (index > -1) {
+                $scope.cartItems.splice(index, 1); // Remove the ordered item from the cart display
+            }
+        }).catch(function(deleteError) {
+            console.error('Error deleting product from cart:', deleteError);
+        });
+                        }).catch(function(error) {
+                            console.error('Error placing order:', error);
+                        });
+                    });
+    
+                    // Add Close functionality
+                    document.getElementById('closePopupButton').addEventListener('click', function() {
+                        document.getElementById('popupOverlay').style.display = 'none';  // Hide the overlay
+                        document.getElementById('popupContent').style.display = 'none';  // Hide the popup
+                    });
+                }).catch(function(error) {
+                    console.error('Error fetching account details:', error);
+                });
+            };
+    
+           // Fetch cart items when the controller loads
+    $scope.getCartItems = function() {
+        $http.post('http://localhost:3000/api/getCart', {
+            username: $scope.user.username,
+            email: $scope.user.email
+        }).then(function(response) {
+            $scope.cartItems = response.data; // Update cart items
+        }).catch(function(error) {
+            console.error('Error fetching cart items:', error);
+        });
+    };
+
+     // Fetch cart items when the controller loads
+     $scope.getCartItems = function() {
+        $http.post('http://localhost:3000/api/getCart', {
+            username: $scope.user.username,
+            email: $scope.user.email
+        }).then(function(response) {
+            $scope.cartItems = response.data; // Update cart items
+        }).catch(function(error) {
+            console.error('Error fetching cart items:', error);
+        });
+    };
+
+    // Function to place an order for all carted products
+    $scope.placeOrder = function() {
+        // Array to hold promises for placing orders
+        var orderPromises = $scope.cartItems.map(function(item) {
+            return $http.post('http://localhost:3000/api/placeOrder', {
+                username: $scope.user.username,
+                email: $scope.user.email,
+                productName: item.productName,
+                productImage: item.productImage,
+                productDescription: item.productDescription,
+                selectedQuantity: item.selectedQuantity,
+                originalPrice: item.originalPrice,
+                discountedPrice: item.discountedPrice,
+                youSaved: item.originalPrice - item.discountedPrice // Calculate savings
+            }).then(function() {
+                // After placing the order, remove the item from the cart
+                return $http.post('http://localhost:3000/api/removeFromCart', {
+                    username: $scope.user.username,
+                    email: $scope.user.email,
+                    productName: item.productName // Assuming you identify items by product name
+                });
+            });
+        });
+
+        // Wait for all orders to be placed and items to be removed
+        Promise.all(orderPromises).then(function() {
+            $scope.showConfirmationPopup(); // Show confirmation pop-up
+            $scope.getCartItems(); // Refresh cart items to get updated view
+        }).catch(function(error) {
+            console.error('Error placing orders or removing items:', error);
+        });
+    };
+
+    // Function to show confirmation pop-up
+    $scope.showConfirmationPopup = function() {
+        $scope.confirmationMessage = 'All orders placed successfully!';
+        document.getElementById('confirmationPopup').style.display = 'block';
+    };
+
+    // Function to close confirmation pop-up
+    $scope.closeConfirmationPopup = function() {
+        document.getElementById('confirmationPopup').style.display = 'none';
+    };
+
+    // Other functions remain unchanged...
+
+    // Fetch cart items on load
+    $scope.getCartItems();
+    
+            // Function to handle removing a carted product
+            $scope.removeItem = function(index, item) {
+                $http.post('http://localhost:3000/api/removeFromCart', {
+                    username: $scope.user.username,
+                    email: $scope.user.email,
+                    productName: item.productName
+                }).then(function(response) {
+                    $scope.cartItems.splice(index, 1); // Remove the item from cartItems
+                }).catch(function(error) {
+                    console.error('Error removing item from cart:', error);
+                });
+            };
+        }]);
+    </script>
+    
+    
+</head>
+
+<style>
+/* Global Styles */
+body {
+    background-color:rgb(229, 230, 191);
+    margin: 0;
+    font-family: Arial, 'Montserrat';
+    margin:0;
+    padding:0;
+
+}
+
+ header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: rgb(200, 153, 140);
+            border-bottom: 1px solid #ddd;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .header-left .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 1s infinite;
+        }
+
+        .header-left .logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .header-left span {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: Arial, 'Montserrat';
+            margin-left: 10px;
+        }
+
+        .header-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-center input {
+            padding: 8px;
+            font-size: 18px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header-center button {
+            background: rgb(120, 176, 0);
+            color: yellow;
+            border: none;
+            padding: 8px 12px;
+            margin-left: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-center button:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+        .header-center button i {
+            font-size: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .header-right .offers {
+            margin-right: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .header-right .nav-link {
+            color: black;
+            text-decoration: none;
+            padding: 8px 12px;
+            margin-right: 10px;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .header-right .nav-link:hover {
+            background-color: rgb(120, 176, 0);
+            transform: scale(1.1);
+        }
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-30px);
+    }
+    60% {
+        transform: translateY(-15px);
+    }
+}
+/* Cart container styles */
+.cart-container {
+    font-family: 'Montserrat';
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Add padding for spacing */
+}
+
+/* Individual cart item styles */
+.cart-item {
+    font-family: 'Montserrat';
+    display: flex;
+    border: 1px solid #ddd; /* Box border */
+    padding: 15px;
+    margin: 10px 0; /* Vertical margin for spacing */
+    width: 60%; /* Width of each item */
+    align-items: flex-start; /* Align items to the start */
+    border-radius: 5px; /* Rounded corners */
+    background-color: white; /* Background color for items */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Slight shadow */
+}
+
+/* Product image styles */
+.cart-product-image {
+    align-items: center;
+    width: 200px; /* Fixed width */
+    height: 250px; /* Fixed height for uniformity */
+    object-fit: cover; /* Cover the container */
+    margin-right: 20px; /* Spacing between image and text */
+    border-radius: 5px; /* Slight rounding of image corners */
+}
+
+/* Cart details container */
+.cart-details {
+    font-family: 'Montserrat';
+    flex-grow: 1; /* Allow details to grow */
+}
+
+/* Bill summary styles */
+#bill-summary {
+    display:justify;
+    text-align:center;
+    font-family: 'Montserrat';
+    background-color: rgb(200, 153, 140);
+    padding: 15px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Shadow */
+    margin-top: 20px; /* Spacing from cart items */
+    width: 100%; /* Match the width of cart items */
+}
+
+#bill-summary h3 {
+    text-align:center;
+    font-family: 'Montserrat';
+    font-size: 1.5em; /* Font size for heading */
+    margin-bottom: 10px; /* Spacing below heading */
+}
+/* Actions (Buttons for Add to Cart and Place Order) */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.billsum-button{
+    display:justify;
+    text-align:center;
+    align-items:center;
+  font-family:'Montserrat';
+  background-color:rgb(255, 0, 86); /* Elegant purple */
+  color: #f8f8f8; /* Soft white */
+  padding: 10px; /* Increased padding */
+  font-size: 16px; /* Larger font size */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 20%;
+  transition: background-color 0.3s; /* Smooth transition */ 
+}
+.billsum-button:hover{
+  background-color: #46327b; /* Darker shade on hover */
+}
+/* Button styles */
+.crt-button {
+   
+ font-family:'Montserrat';
+  background-color:rgb(255, 0, 86); /* Elegant purple */
+  color: #f8f8f8; /* Soft white */
+  padding: 10px; /* Increased padding */
+  font-size: 16px; /* Larger font size */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 20%;
+  transition: background-color 0.3s; /* Smooth transition */
+}
+
+.crt-button:hover{
+  background-color: #46327b; /* Darker shade on hover */
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .cart-item {
+        flex-direction: column; /* Stack items on smaller screens */
+        align-items: flex-start; /* Align to start */
+    }
+
+    .cart-product-image {
+        margin-bottom: 10px; /* Spacing below image */
+    }
+
+    #bill-summary {
+        width: 90%; /* Full width on smaller screens */
+    }
+}
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: none; /* Hide by default */
+    z-index: 999; /* Ensure it sits above other content */
+}
+
+.popup {
+    border: 2px solid #333;
+    padding: 20px;
+    position: fixed;
+    z-index: 1000;
+    background: white;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+    display: none; /* Hide by default */
+}
+
+.popup img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+}
+
+.popup button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color:rgb(255, 0, 86);
+    font-family:Montserrat;
+    color: white;
+    cursor: pointer;
+}
+
+.popup button:hover {
+    background-color: #46327b;
+}
+
+.confirmation-message {
+    font-family:Montserrat;
+    margin-top: 10px;
+    color: #ff5722;
+    font-weight: bold;
+}
+/* Styling for the Close Button */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Hover effect */
+}
+
+
+.footer-main {
+    background-color: #222;
+    color: #ecf0f1;
+    padding: 20px 0;
+}
+
+.footer-main .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px; /* Add spacing between rows */
+}
+
+.footer-top-box {
+    flex: 1;
+    margin: 10px;
+    padding: 20px;
+    text-align: center; /* Center content in the box */
+}
+
+.footer-top-box h3,
+.footer-top-box h4 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.list-time,
+.footer-top-box ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.list-time li,
+.footer-top-box ul li {
+    margin-bottom: 10px;
+}
+
+.newsletter-box {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.newsletter-box .form-group {
+    position: relative;
+    flex: 1;
+}
+
+.newsletter-box input {
+    width: 80%;
+    padding: 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.newsletter-box input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.newsletter-box button {
+    padding: 15px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.newsletter-box button:hover {
+    background-color: #2980b9;
+}
+
+.footer-copyright {
+    background-color: #222;
+    color: #ccc;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 20px;
+}
+
+.footer-company a {
+    color: #ecf0f1;
+}
+
+.footer-company a:hover {
+    text-decoration: underline;
+}
+
+.footer-link-contact li p i {
+    color: #ecf0f1; /* Change icon color to white */
+}
+
+.footer-link-contact li p a {
+    color: #ecf0f1; /* Change link color to white */
+}
+.social-icons {
+    display: flex;
+    justify-content: center; /* Center the icons */
+    gap: 15px; /* Space between icons */
+}
+
+.social-icons li {
+    display: inline; /* Display list items inline */
+}
+
+</style>
+</head>
+<body ng-controller="MainController">
+    <header>
+        <div class="header-left">
+            <img src="logo.jpg" alt="Agrimart Logo" class="logo">
+            <span>Agrimart</span>
+        </div>
+        <div class="header-center">
+            <input type="text" ng-model="searchQuery" placeholder="Search...">
+            <button ng-click="search()">
+                <i class="fa fa-search"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <div class="header-right">
+            <a class="nav-link" href="index.html"><i class="fa fa-home"></i> HOME</a>
+            <a class="nav-link" href="about.html"><i class="fa fa-users"></i> ABOUT US</a>
+            <a class="nav-link" href="myorders.html"><i class="fa fa-shopping-cart"></i> MY ORDERS</a>
+            <a class="nav-link" href="mycart.html"><i class="fa fa-cart-plus"></i> MY CART</a>
+            <a class="nav-link" href="myaccount.html"><i class="fa fa-user"></i> ME</a>
+        </div>
+
+        </div>
+    </header>
+
+ <center><h1 style= "font-family: Montserrat;">My Carts</h1></center>
+ <div id="cart-container" class="cart-container">
+    <div ng-repeat="item in cartItems" class="cart-item">
+        <img ng-src="{{item.productImage}}" alt="{{item.productName}}" class="cart-product-image">
+        <div class="cart-details">
+            <h3>{{item.productName}}</h3>
+            <p>{{item.productDescription}}</p>
+            <p>Original Price: ₹{{item.originalPrice}}</p>
+            <p>Discounted Price: ₹{{item.discountedPrice}}</p>
+            <p>You Saved: ₹{{item.originalPrice - item.discountedPrice}}</p>
+            
+            <div class="actions">
+            <button class=crt-button ng-click="buyNow(item)"><i class="fas fa-shopping-cart"></i> Buy Now</button> <!-- Buy Now Button -->
+            <button class="crt-button" ng-click="removeItem($index, item)"><i class="fas fa-trash"></i> Uncart</button> <!-- Uncart Button -->
+        </div>
+        </div>
+        </div>
+    </div>
+</div>
+<div class="popup-overlay" id="popupOverlay" style="display:none;"></div>
+<div class="popup" id="popupContent" style="display:none;">
+    <!-- Order details will be injected here -->
+</div>
+
+
+<br>
+
+<!-- Bill Summary Section -->
+<div id="bill-summary" ng-if="cartItems.length > 0">
+    <h3>Bill Summary</h3>
+    <p>Original Price of your carted products: ₹{{getTotalOriginalPrice()}}</p>
+    <p>Discount Price of your carted products: ₹{{getTotalDiscountedPrice()}}</p>
+    <p>You Saved: ₹{{getTotalOriginalPrice() - getTotalDiscountedPrice()}}</p>
+    <!-- Place Order Button -->
+     <!-- Shipping Address Section -->
+    <div ng-if="accountDetails">
+        <h3>Shipping Address</h3>
+        <p>{{accountDetails.doorNo}}, {{accountDetails.street}}, {{accountDetails.landmark}}</p>
+        <p>{{accountDetails.city}}, {{accountDetails.state}}</p>
+        <p>Mobile No: {{accountDetails.phone}}</p>
+    </div>
+    <!-- Order Date and Delivery Date -->
+    <div>
+        <h3>Order Details</h3>
+        <p>Order Date: {{orderDate | date:'dd-MM-yyyy'}}</p>
+        <p>Expected Delivery Date: {{deliveryDate | date:'dd-MM-yyyy'}}</p>
+    </div>
+    <!-- Place Order Button -->
+    <div class="actions">
+        <button ng-if="cartItems.length > 0" class="billsum-button" ng-click="placeOrder()">
+            <i class="fas fa-shopping-cart"></i>Place Order
+        </button>
+    </div>
+</div>
+
+<!-- Confirmation Pop-Up -->
+<div id="confirmationPopup" style="display:none;position: fixed;
+font-family:Montserrat;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background-color:rgb(0, 169, 144); /* Green background */
+color: white;
+padding: 20px;
+border-radius: 8px;
+z-index: 1000; /* Overlay above other elements */">
+    <h3>Order Confirmation</h3>
+    <p>{{confirmationMessage}}</p>
+    <button class="close-btn" ng-click="closeConfirmationPopup()">Close</button>
+</div>
+</div>
+
+<br>
+
+
+
+<br>
+ <footer>
+    <div class="footer-main">
+        <div class="container">
+            <div class="row">
+                <div class="footer-top-box">
+                    <h3>Business Time</h3>
+                    <ul class="list-time">
+                        <li>Everyday</li>
+                        <li>Your Timing</li>
+                    </ul>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Newsletter</h3>
+                    <form class="newsletter-box">
+                        <div class="form-group">
+                            <input type="email" name="Email" placeholder="Email Address*" />
+                        </div>
+                        <button class="btn" type="submit">Submit</button>
+                    </form>
+                </div>
+<hr>
+                <div class="footer-top-box">
+                    <h3>Social Media</h3>
+                    <p>Explore Us In</p>
+                    <ul class="social-icons">
+                        <li><a href="#"><i class="fab fa-facebook" aria-hidden="true"></i></a></li>
+                        <li><a href="#"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+            
+<hr>
+                    <div class="footer-top-box">
+                    <h4>Contact Us</h4>
+                    <ul>
+                    
+                        <li>
+                            <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:+91-987654321">+91-987654321</a></p>
+                        </li>
+                        <li>
+                            <p><i class="fas fa-envelope"></i>Email: <a href="mailto:agrimart@gmail.com">agrimart@gmail.com</a></p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+  </div>
+
+    <div class="footer-copyright">
+        <p class="footer-company">All Rights Reserved. &copy; 2024 <a href="index.html">Agrimart</a></p>
+    </div>
+</footer>
+
+
+</body>
+</html>
+
